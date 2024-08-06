@@ -1,23 +1,60 @@
-
-function reflex_agent(location, state){
-    if (state=="SUCIO") return "LIMPIO";
-    else if (location=="A") return "DERECHA";
-    else if (location=="B") return "IZQUIERDA";
+function reflexAgent(location, state) {
+    if (state === "DIRTY") {
+        return 'CLEAN';
+    } else if (location === 'A') {
+        return 'RIGHT';
+    } else if (location === 'B') {
+        return 'LEFT';
+    }
 }
 
-function test(states){
-       var location = states[0];		
-       var state = states[0] == "A" ? states[1] : states[2];
-       var action_result = reflex_agent(location, state);
-       document.getElementById("log").innerHTML+="<br>Ubicacion: ".concat(location).concat(" | Accion: ").concat(action_result);
-       if (action_result == "LIMPIO"){
-         if (location == "A") states[1] = "LIMPIO";
-          else if (location == "B") states[2] = "LIMPIO";
-       }
-       else if (action_result == "DERECHA") states[0] = "B";
-       else if (action_result == "IZQUIERDA") states[0] = "A";		
- setTimeout(function(){ test(states); }, 2000);
+function generateAllStates(locations, cleanliness) {
+    let states = [];
+    for (let loc of locations) {
+        for (let stateA of cleanliness) {
+            for (let stateB of cleanliness) {
+                states.push([loc, stateA, stateB]);
+            }
+        }
+    }
+    return states;
 }
 
-var states = ["A","SUCIO","SUCIO"];
-test(states);
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function test(location, stateA, stateB) {
+    let states = [location, stateA, stateB];
+    while (true) {
+        location = states[0];
+        let state = (location === 'A') ? states[2] : states[1];
+        let action = reflexAgent(location, state);
+        document.getElementById("log").innerHTML += `<br>Location: ${location} | Action: ${action}`;
+
+        if (states.slice(1).every(s => s === "CLEAN")) {
+            document.getElementById("log").innerHTML += "<br>---------------------------------------------------";
+            break;
+        }
+
+        if (action === "CLEAN") {
+            states[1] = "CLEAN";
+            states[2] = "CLEAN";
+        } else if (action === "RIGHT") {
+            states[0] = 'B';
+        } else if (action === "LEFT") {
+            states[0] = 'A';
+        }
+
+        await sleep(1000);
+    }
+}
+
+let locations = ["A", "B"];
+let cleanliness = ["DIRTY", "CLEAN"];
+
+let possibleStates = generateAllStates(locations, cleanliness);
+
+possibleStates.forEach(state => {
+    test(...state);
+});
